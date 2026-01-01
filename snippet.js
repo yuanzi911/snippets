@@ -1,23 +1,23 @@
-const FIXED_UUID = '333e0248-17d4-4b84-8034-b28b53fa1775';// ½¨ÒéĞŞ¸ÄÎª×Ô¼ºµÄ¹æ·¶»¯UUID£¬Èç²»ĞèÒª¿ÉÁô¿Õ
-let ·´´úIP = '', ÆôÓÃSOCKS5·´´ú = null, ÆôÓÃSOCKS5È«¾Ö·´´ú = false, ÎÒµÄSOCKS5ÕËºÅ = '', parsedSocks5Address = {};
+const FIXED_UUID = '333e0248-17d4-4b84-8034-b28b53fa1775';// å»ºè®®ä¿®æ”¹ä¸ºè‡ªå·±çš„è§„èŒƒåŒ–UUIDï¼Œå¦‚ä¸éœ€è¦å¯ç•™ç©º
+let åä»£IP = '', å¯ç”¨SOCKS5åä»£ = null, å¯ç”¨SOCKS5å…¨å±€åä»£ = false, æˆ‘çš„SOCKS5è´¦å· = '', parsedSocks5Address = {};
 export default {
     async fetch(request) {
         try {
             const url = new URL(request.url);
-            // ¼ì²éÊÇ·ñÎª WebSocket Éı¼¶ÇëÇó
+            // æ£€æŸ¥æ˜¯å¦ä¸º WebSocket å‡çº§è¯·æ±‚
             const upgradeHeader = request.headers.get('Upgrade');
             if (upgradeHeader !== 'websocket') {
                 return new Response('Hello World!', { status: 200 });
             } else {
-                ·´´úIP = ·´´úIP ? ·´´úIP : request.cf.colo + '.proxyIP.cmliuSSSS.NET';
-                await ·´´ú²ÎÊı»ñÈ¡(request);
-                const [·´´úIPµØÖ·, ·´´úIP¶Ë¿Ú] = await ½âÎöµØÖ·¶Ë¿Ú(·´´úIP);
+                åä»£IP = åä»£IP ? åä»£IP : request.cf.colo + '.proxyIP.cmliuSSSS.NET';
+                await åä»£å‚æ•°è·å–(request);
+                const [åä»£IPåœ°å€, åä»£IPç«¯å£] = await è§£æåœ°å€ç«¯å£(åä»£IP);
                 return await handleSPESSWebSocket(request, {
                     parsedSocks5Address,
-                    enableSocks: ÆôÓÃSOCKS5·´´ú,
-                    enableGlobalSocks: ÆôÓÃSOCKS5È«¾Ö·´´ú,
-                    ProxyIP: ·´´úIPµØÖ·,
-                    ProxyPort: ·´´úIP¶Ë¿Ú
+                    enableSocks: å¯ç”¨SOCKS5åä»£,
+                    enableGlobalSocks: å¯ç”¨SOCKS5å…¨å±€åä»£,
+                    ProxyIP: åä»£IPåœ°å€,
+                    ProxyPort: åä»£IPç«¯å£
                 });
             }
         } catch (err) {
@@ -34,12 +34,12 @@ async function handleSPESSWebSocket(request, config) {
         ProxyIP,
         ProxyPort
     } = config;
-    const wsÅä¶Ô = new WebSocketPair();
-    const [clientWS, serverWS] = Object.values(wsÅä¶Ô);
+    const wsé…å¯¹ = new WebSocketPair();
+    const [clientWS, serverWS] = Object.values(wsé…å¯¹);
 
     serverWS.accept();
 
-    // WebSocketĞÄÌø»úÖÆ£¬Ã¿30Ãë·¢ËÍÒ»´Îping
+    // WebSocketå¿ƒè·³æœºåˆ¶ï¼Œæ¯30ç§’å‘é€ä¸€æ¬¡ping
     let heartbeatInterval = setInterval(() => {
         if (serverWS.readyState === WS_READY_STATE_OPEN) {
             try {
@@ -56,7 +56,7 @@ async function handleSPESSWebSocket(request, config) {
     serverWS.addEventListener('close', clearHeartbeat);
     serverWS.addEventListener('error', clearHeartbeat);
 
-    // ´¦Àí WebSocket Êı¾İÁ÷
+    // å¤„ç† WebSocket æ•°æ®æµ
     const earlyDataHeader = request.headers.get('sec-websocket-protocol') || '';
     const wsReadable = createWebSocketReadableStream(serverWS, earlyDataHeader);
     let remoteSocket = null;
@@ -92,7 +92,7 @@ async function handleSPESSWebSocket(request, config) {
                     udpStreamWrite(rawClientData);
                     return;
                 } else {
-                    throw new Error('UDP´úÀí½öÖ§³ÖDNS(¶Ë¿Ú53)');
+                    throw new Error('UDPä»£ç†ä»…æ”¯æŒDNS(ç«¯å£53)');
                 }
             }
             async function connectAndWrite(address, port) {
@@ -129,13 +129,13 @@ async function handleSPESSWebSocket(request, config) {
                     writer.releaseLock();
                     tcpSocket.closed.catch(() => { }).finally(() => {
                         if (serverWS.readyState === WS_READY_STATE_OPEN) {
-                            serverWS.close(1000, 'Á¬½ÓÒÑ¹Ø±Õ');
+                            serverWS.close(1000, 'è¿æ¥å·²å…³é—­');
                         }
                     });
                     pipeRemoteToWebSocket(tcpSocket, serverWS, vlessRespHeader, null);
                 } catch (err) {
                     closeSocket(remoteSocket);
-                    serverWS.close(1011, '´úÀíÁ¬½ÓÊ§°Ü: ' + (err && err.message ? err.message : err));
+                    serverWS.close(1011, 'ä»£ç†è¿æ¥å¤±è´¥: ' + (err && err.message ? err.message : err));
                 }
             }
             try {
@@ -148,7 +148,7 @@ async function handleSPESSWebSocket(request, config) {
                 }
             } catch (err) {
                 closeSocket(remoteSocket);
-                serverWS.close(1011, 'Á¬½ÓÊ§°Ü: ' + (err && err.message ? err.message : err));
+                serverWS.close(1011, 'è¿æ¥å¤±è´¥: ' + (err && err.message ? err.message : err));
             }
         },
         close() {
@@ -158,7 +158,7 @@ async function handleSPESSWebSocket(request, config) {
         }
     })).catch(err => {
         closeSocket(remoteSocket);
-        serverWS.close(1011, 'ÄÚ²¿´íÎó: ' + (err && err.message ? err.message : err));
+        serverWS.close(1011, 'å†…éƒ¨é”™è¯¯: ' + (err && err.message ? err.message : err));
     });
 
     return new Response(null, {
@@ -194,16 +194,16 @@ function createWebSocketReadableStream(ws, earlyDataHeader) {
     });
 }
 
-// Ö»ÔÊĞí¹Ì¶¨UUID
+// åªå…è®¸å›ºå®šUUID
 function parseVLESSHeader(buffer) {
     if (buffer.byteLength < 24) {
-        return { hasError: true, message: 'ÎŞĞ§µÄÍ·²¿³¤¶È' };
+        return { hasError: true, message: 'æ— æ•ˆçš„å¤´éƒ¨é•¿åº¦' };
     }
     const view = new DataView(buffer);
     const version = new Uint8Array(buffer.slice(0, 1));
     const uuid = formatUUID(new Uint8Array(buffer.slice(1, 17)));
     if (FIXED_UUID && uuid !== FIXED_UUID) {
-        return { hasError: true, message: 'ÎŞĞ§µÄÓÃ»§' };
+        return { hasError: true, message: 'æ— æ•ˆçš„ç”¨æˆ·' };
     }
     const optionsLength = view.getUint8(17);
     const command = view.getUint8(18 + optionsLength);
@@ -212,7 +212,7 @@ function parseVLESSHeader(buffer) {
     } else if (command === 2) {
         isUDP = true;
     } else {
-        return { hasError: true, message: '²»Ö§³ÖµÄÃüÁî£¬½öÖ§³ÖTCP(01)ºÍUDP(02)' };
+        return { hasError: true, message: 'ä¸æ”¯æŒçš„å‘½ä»¤ï¼Œä»…æ”¯æŒTCP(01)å’ŒUDP(02)' };
     }
     let offset = 19 + optionsLength;
     const port = view.getUint16(offset);
@@ -238,7 +238,7 @@ function parseVLESSHeader(buffer) {
             address = ipv6.join(':').replace(/(^|:)0+(\w)/g, '$1$2');
             break;
         default:
-            return { hasError: true, message: '²»Ö§³ÖµÄµØÖ·ÀàĞÍ' };
+            return { hasError: true, message: 'ä¸æ”¯æŒçš„åœ°å€ç±»å‹' };
     }
     return {
         hasError: false,
@@ -276,7 +276,7 @@ function pipeRemoteToWebSocket(remoteSocket, ws, vlessHeader, retry = null) {
                 return;
             }
             if (ws.readyState === WS_READY_STATE_OPEN) {
-                ws.close(1000, 'Õı³£¹Ø±Õ');
+                ws.close(1000, 'æ­£å¸¸å…³é—­');
             }
         },
         abort() {
@@ -285,7 +285,7 @@ function pipeRemoteToWebSocket(remoteSocket, ws, vlessHeader, retry = null) {
     })).catch(err => {
         closeSocket(remoteSocket);
         if (ws.readyState === WS_READY_STATE_OPEN) {
-            ws.close(1011, 'Êı¾İ´«Êä´íÎó');
+            ws.close(1011, 'æ•°æ®ä¼ è¾“é”™è¯¯');
         }
     });
 }
@@ -378,11 +378,11 @@ async function httpConnect(addressType, addressRemote, portRemote, parsedSocks5A
         port: port
     });
 
-    // ¹¹½¨HTTP CONNECTÇëÇó
+    // æ„å»ºHTTP CONNECTè¯·æ±‚
     let connectRequest = `CONNECT ${addressRemote}:${portRemote} HTTP/1.1\r\n`;
     connectRequest += `Host: ${addressRemote}:${portRemote}\r\n`;
 
-    // Ìí¼Ó´úÀíÈÏÖ¤£¨Èç¹ûĞèÒª£©
+    // æ·»åŠ ä»£ç†è®¤è¯ï¼ˆå¦‚æœéœ€è¦ï¼‰
     if (username && password) {
         const authString = `${username}:${password}`;
         const base64Auth = btoa(authString);
@@ -391,20 +391,20 @@ async function httpConnect(addressType, addressRemote, portRemote, parsedSocks5A
 
     connectRequest += `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n`;
     connectRequest += `Proxy-Connection: Keep-Alive\r\n`;
-    connectRequest += `Connection: Keep-Alive\r\n`; // Ìí¼Ó±ê×¼ Connection Í·
+    connectRequest += `Connection: Keep-Alive\r\n`; // æ·»åŠ æ ‡å‡† Connection å¤´
     connectRequest += `\r\n`;
 
     try {
-        // ·¢ËÍÁ¬½ÓÇëÇó
+        // å‘é€è¿æ¥è¯·æ±‚
         const writer = sock.writable.getWriter();
         await writer.write(new TextEncoder().encode(connectRequest));
         writer.releaseLock();
     } catch (err) {
-        console.error('·¢ËÍHTTP CONNECTÇëÇóÊ§°Ü:', err);
-        throw new Error(`·¢ËÍHTTP CONNECTÇëÇóÊ§°Ü: ${err.message}`);
+        console.error('å‘é€HTTP CONNECTè¯·æ±‚å¤±è´¥:', err);
+        throw new Error(`å‘é€HTTP CONNECTè¯·æ±‚å¤±è´¥: ${err.message}`);
     }
 
-    // ¶ÁÈ¡HTTPÏìÓ¦
+    // è¯»å–HTTPå“åº”
     const reader = sock.readable.getReader();
     let respText = '';
     let connected = false;
@@ -414,49 +414,49 @@ async function httpConnect(addressType, addressRemote, portRemote, parsedSocks5A
         while (true) {
             const { value, done } = await reader.read();
             if (done) {
-                console.error('HTTP´úÀíÁ¬½ÓÖĞ¶Ï');
-                throw new Error('HTTP´úÀíÁ¬½ÓÖĞ¶Ï');
+                console.error('HTTPä»£ç†è¿æ¥ä¸­æ–­');
+                throw new Error('HTTPä»£ç†è¿æ¥ä¸­æ–­');
             }
 
-            // ºÏ²¢½ÓÊÕµ½µÄÊı¾İ
+            // åˆå¹¶æ¥æ”¶åˆ°çš„æ•°æ®
             const newBuffer = new Uint8Array(responseBuffer.length + value.length);
             newBuffer.set(responseBuffer);
             newBuffer.set(value, responseBuffer.length);
             responseBuffer = newBuffer;
 
-            // ½«ÊÕµ½µÄÊı¾İ×ª»»ÎªÎÄ±¾
+            // å°†æ”¶åˆ°çš„æ•°æ®è½¬æ¢ä¸ºæ–‡æœ¬
             respText = new TextDecoder().decode(responseBuffer);
 
-            // ¼ì²éÊÇ·ñÊÕµ½ÍêÕûµÄHTTPÏìÓ¦Í·
+            // æ£€æŸ¥æ˜¯å¦æ”¶åˆ°å®Œæ•´çš„HTTPå“åº”å¤´
             if (respText.includes('\r\n\r\n')) {
-                // ·ÖÀëHTTPÍ·ºÍ¿ÉÄÜµÄÊı¾İ²¿·Ö
+                // åˆ†ç¦»HTTPå¤´å’Œå¯èƒ½çš„æ•°æ®éƒ¨åˆ†
                 const headersEndPos = respText.indexOf('\r\n\r\n') + 4;
                 const headers = respText.substring(0, headersEndPos);
 
-                // ¼ì²éÏìÓ¦×´Ì¬
+                // æ£€æŸ¥å“åº”çŠ¶æ€
                 if (headers.startsWith('HTTP/1.1 200') || headers.startsWith('HTTP/1.0 200')) {
                     connected = true;
 
-                    // Èç¹ûÏìÓ¦Í·Ö®ºó»¹ÓĞÊı¾İ£¬ÎÒÃÇĞèÒª±£´æÕâĞ©Êı¾İÒÔ±ãºóĞø´¦Àí
+                    // å¦‚æœå“åº”å¤´ä¹‹åè¿˜æœ‰æ•°æ®ï¼Œæˆ‘ä»¬éœ€è¦ä¿å­˜è¿™äº›æ•°æ®ä»¥ä¾¿åç»­å¤„ç†
                     if (headersEndPos < responseBuffer.length) {
                         const remainingData = responseBuffer.slice(headersEndPos);
-                        // ´´½¨Ò»¸ö»º³åÇøÀ´´æ´¢ÕâĞ©Êı¾İ£¬ÒÔ±ãÉÔºóÊ¹ÓÃ
+                        // åˆ›å»ºä¸€ä¸ªç¼“å†²åŒºæ¥å­˜å‚¨è¿™äº›æ•°æ®ï¼Œä»¥ä¾¿ç¨åä½¿ç”¨
                         const dataStream = new ReadableStream({
                             start(controller) {
                                 controller.enqueue(remainingData);
                             }
                         });
 
-                        // ´´½¨Ò»¸öĞÂµÄTransformStreamÀ´´¦Àí¶îÍâÊı¾İ
+                        // åˆ›å»ºä¸€ä¸ªæ–°çš„TransformStreamæ¥å¤„ç†é¢å¤–æ•°æ®
                         const { readable, writable } = new TransformStream();
-                        dataStream.pipeTo(writable).catch(err => console.error('´¦ÀíÊ£ÓàÊı¾İ´íÎó:', err));
+                        dataStream.pipeTo(writable).catch(err => console.error('å¤„ç†å‰©ä½™æ•°æ®é”™è¯¯:', err));
 
-                        // Ìæ»»Ô­Ê¼readableÁ÷
+                        // æ›¿æ¢åŸå§‹readableæµ
                         // @ts-ignore
                         sock.readable = readable;
                     }
                 } else {
-                    const errorMsg = `HTTP´úÀíÁ¬½ÓÊ§°Ü: ${headers.split('\r\n')[0]}`;
+                    const errorMsg = `HTTPä»£ç†è¿æ¥å¤±è´¥: ${headers.split('\r\n')[0]}`;
                     console.error(errorMsg);
                     throw new Error(errorMsg);
                 }
@@ -465,18 +465,18 @@ async function httpConnect(addressType, addressRemote, portRemote, parsedSocks5A
         }
     } catch (err) {
         reader.releaseLock();
-        throw new Error(`´¦ÀíHTTP´úÀíÏìÓ¦Ê§°Ü: ${err.message}`);
+        throw new Error(`å¤„ç†HTTPä»£ç†å“åº”å¤±è´¥: ${err.message}`);
     }
 
     reader.releaseLock();
 
     if (!connected) {
-        throw new Error('HTTP´úÀíÁ¬½ÓÊ§°Ü: Î´ÊÕµ½³É¹¦ÏìÓ¦');
+        throw new Error('HTTPä»£ç†è¿æ¥å¤±è´¥: æœªæ”¶åˆ°æˆåŠŸå“åº”');
     }
 
     return sock;
 }
-async function handleUDPOutBound(webSocket, Ğ­ÒéÏìÓ¦Í·) {
+async function handleUDPOutBound(webSocket, åè®®å“åº”å¤´) {
     let isVlessHeaderSent = false;
     const transformStream = new TransformStream({
         start(controller) {
@@ -514,7 +514,7 @@ async function handleUDPOutBound(webSocket, Ğ­ÒéÏìÓ¦Í·) {
                 if (isVlessHeaderSent) {
                     webSocket.send(await new Blob([udpSizeBuffer, dnsQueryResult]).arrayBuffer());
                 } else {
-                    webSocket.send(await new Blob([Ğ­ÒéÏìÓ¦Í·, udpSizeBuffer, dnsQueryResult]).arrayBuffer());
+                    webSocket.send(await new Blob([åè®®å“åº”å¤´, udpSizeBuffer, dnsQueryResult]).arrayBuffer());
                     isVlessHeaderSent = true;
                 }
             }
@@ -531,96 +531,96 @@ async function handleUDPOutBound(webSocket, Ğ­ÒéÏìÓ¦Í·) {
     };
 }
 
-// ========== ±ØÒª³£Á¿ºÍÒÀÀµ ==========
+// ========== å¿…è¦å¸¸é‡å’Œä¾èµ– ==========
 const WS_READY_STATE_OPEN = 1;
 import { connect } from 'cloudflare:sockets';
 
-async function ½âÎöµØÖ·¶Ë¿Ú(proxyIP) {
+async function è§£æåœ°å€ç«¯å£(proxyIP) {
     proxyIP = proxyIP.toLowerCase();
-    let µØÖ· = proxyIP, ¶Ë¿Ú = 443;
+    let åœ°å€ = proxyIP, ç«¯å£ = 443;
     if (proxyIP.includes('.tp')) {
         const tpMatch = proxyIP.match(/\.tp(\d+)/);
-        if (tpMatch) ¶Ë¿Ú = parseInt(tpMatch[1], 10);
-        return [µØÖ·, ¶Ë¿Ú];
+        if (tpMatch) ç«¯å£ = parseInt(tpMatch[1], 10);
+        return [åœ°å€, ç«¯å£];
     }
     if (proxyIP.includes(']:')) {
         const parts = proxyIP.split(']:');
-        µØÖ· = parts[0] + ']';
-        ¶Ë¿Ú = parseInt(parts[1], 10) || ¶Ë¿Ú;
+        åœ°å€ = parts[0] + ']';
+        ç«¯å£ = parseInt(parts[1], 10) || ç«¯å£;
     } else if (proxyIP.includes(':') && !proxyIP.startsWith('[')) {
         const colonIndex = proxyIP.lastIndexOf(':');
-        µØÖ· = proxyIP.slice(0, colonIndex);
-        ¶Ë¿Ú = parseInt(proxyIP.slice(colonIndex + 1), 10) || ¶Ë¿Ú;
+        åœ°å€ = proxyIP.slice(0, colonIndex);
+        ç«¯å£ = parseInt(proxyIP.slice(colonIndex + 1), 10) || ç«¯å£;
     }
-    return [µØÖ·, ¶Ë¿Ú];
+    return [åœ°å€, ç«¯å£];
 }
 
-async function ·´´ú²ÎÊı»ñÈ¡(request) {
+async function åä»£å‚æ•°è·å–(request) {
     const url = new URL(request.url);
     const { pathname, searchParams } = url;
     const pathLower = pathname.toLowerCase();
 
-    // ³õÊ¼»¯
-    ÎÒµÄSOCKS5ÕËºÅ = searchParams.get('socks5') || searchParams.get('http') || null;
-    ÆôÓÃSOCKS5È«¾Ö·´´ú = searchParams.has('globalproxy') || false;
+    // åˆå§‹åŒ–
+    æˆ‘çš„SOCKS5è´¦å· = searchParams.get('socks5') || searchParams.get('http') || null;
+    å¯ç”¨SOCKS5å…¨å±€åä»£ = searchParams.has('globalproxy') || false;
 
-    // Í³Ò»´¦Àí·´´úIP²ÎÊı (ÓÅÏÈ¼¶×î¸ß,Ê¹ÓÃÕıÔòÒ»´ÎÆ¥Åä)
+    // ç»Ÿä¸€å¤„ç†åä»£IPå‚æ•° (ä¼˜å…ˆçº§æœ€é«˜,ä½¿ç”¨æ­£åˆ™ä¸€æ¬¡åŒ¹é…)
     const proxyMatch = pathLower.match(/\/(proxyip[.=]|pyip=|ip=)(.+)/);
     if (searchParams.has('proxyip')) {
-        const Â·²ÎIP = searchParams.get('proxyip');
-        ·´´úIP = Â·²ÎIP.includes(',') ? Â·²ÎIP.split(',')[Math.floor(Math.random() * Â·²ÎIP.split(',').length)] : Â·²ÎIP;
+        const è·¯å‚IP = searchParams.get('proxyip');
+        åä»£IP = è·¯å‚IP.includes(',') ? è·¯å‚IP.split(',')[Math.floor(Math.random() * è·¯å‚IP.split(',').length)] : è·¯å‚IP;
         return;
     } else if (proxyMatch) {
-        const Â·²ÎIP = proxyMatch[1] === 'proxyip.' ? `proxyip.${proxyMatch[2]}` : proxyMatch[2];
-        ·´´úIP = Â·²ÎIP.includes(',') ? Â·²ÎIP.split(',')[Math.floor(Math.random() * Â·²ÎIP.split(',').length)] : Â·²ÎIP;
+        const è·¯å‚IP = proxyMatch[1] === 'proxyip.' ? `proxyip.${proxyMatch[2]}` : proxyMatch[2];
+        åä»£IP = è·¯å‚IP.includes(',') ? è·¯å‚IP.split(',')[Math.floor(Math.random() * è·¯å‚IP.split(',').length)] : è·¯å‚IP;
         return;
     }
 
-    // ´¦ÀíSOCKS5/HTTP´úÀí²ÎÊı
+    // å¤„ç†SOCKS5/HTTPä»£ç†å‚æ•°
     let socksMatch;
     if ((socksMatch = pathname.match(/\/(socks5?|http):\/?\/?(.+)/i))) {
-        // ¸ñÊ½: /socks5://... »ò /http://...
-        ÆôÓÃSOCKS5·´´ú = socksMatch[1].toLowerCase() === 'http' ? 'http' : 'socks5';
-        ÎÒµÄSOCKS5ÕËºÅ = socksMatch[2].split('#')[0];
-        ÆôÓÃSOCKS5È«¾Ö·´´ú = true;
+        // æ ¼å¼: /socks5://... æˆ– /http://...
+        å¯ç”¨SOCKS5åä»£ = socksMatch[1].toLowerCase() === 'http' ? 'http' : 'socks5';
+        æˆ‘çš„SOCKS5è´¦å· = socksMatch[2].split('#')[0];
+        å¯ç”¨SOCKS5å…¨å±€åä»£ = true;
 
-        // ´¦ÀíBase64±àÂëµÄÓÃ»§ÃûÃÜÂë
-        if (ÎÒµÄSOCKS5ÕËºÅ.includes('@')) {
-            const atIndex = ÎÒµÄSOCKS5ÕËºÅ.lastIndexOf('@');
-            let userPassword = ÎÒµÄSOCKS5ÕËºÅ.substring(0, atIndex).replaceAll('%3D', '=');
+        // å¤„ç†Base64ç¼–ç çš„ç”¨æˆ·åå¯†ç 
+        if (æˆ‘çš„SOCKS5è´¦å·.includes('@')) {
+            const atIndex = æˆ‘çš„SOCKS5è´¦å·.lastIndexOf('@');
+            let userPassword = æˆ‘çš„SOCKS5è´¦å·.substring(0, atIndex).replaceAll('%3D', '=');
             if (/^(?:[A-Z0-9+/]{4})*(?:[A-Z0-9+/]{2}==|[A-Z0-9+/]{3}=)?$/i.test(userPassword) && !userPassword.includes(':')) {
                 userPassword = atob(userPassword);
             }
-            ÎÒµÄSOCKS5ÕËºÅ = `${userPassword}@${ÎÒµÄSOCKS5ÕËºÅ.substring(atIndex + 1)}`;
+            æˆ‘çš„SOCKS5è´¦å· = `${userPassword}@${æˆ‘çš„SOCKS5è´¦å·.substring(atIndex + 1)}`;
         }
     } else if ((socksMatch = pathname.match(/\/(g?s5|socks5|g?http)=(.+)/i))) {
-        // ¸ñÊ½: /socks5=... »ò /s5=... »ò /gs5=... »ò /http=... »ò /ghttp=...
+        // æ ¼å¼: /socks5=... æˆ– /s5=... æˆ– /gs5=... æˆ– /http=... æˆ– /ghttp=...
         const type = socksMatch[1].toLowerCase();
-        ÎÒµÄSOCKS5ÕËºÅ = socksMatch[2];
-        ÆôÓÃSOCKS5·´´ú = type.includes('http') ? 'http' : 'socks5';
-        ÆôÓÃSOCKS5È«¾Ö·´´ú = type.startsWith('g') || ÆôÓÃSOCKS5È«¾Ö·´´ú; // gs5 »ò ghttp ¿ªÍ·ÆôÓÃÈ«¾Ö
+        æˆ‘çš„SOCKS5è´¦å· = socksMatch[2];
+        å¯ç”¨SOCKS5åä»£ = type.includes('http') ? 'http' : 'socks5';
+        å¯ç”¨SOCKS5å…¨å±€åä»£ = type.startsWith('g') || å¯ç”¨SOCKS5å…¨å±€åä»£; // gs5 æˆ– ghttp å¼€å¤´å¯ç”¨å…¨å±€
     }
 
-    // ½âÎöSOCKS5µØÖ·
-    if (ÎÒµÄSOCKS5ÕËºÅ) {
+    // è§£æSOCKS5åœ°å€
+    if (æˆ‘çš„SOCKS5è´¦å·) {
         try {
-            parsedSocks5Address = await »ñÈ¡SOCKS5ÕËºÅ(ÎÒµÄSOCKS5ÕËºÅ);
-            ÆôÓÃSOCKS5·´´ú = searchParams.get('http') ? 'http' : ÆôÓÃSOCKS5·´´ú;
+            parsedSocks5Address = await è·å–SOCKS5è´¦å·(æˆ‘çš„SOCKS5è´¦å·);
+            å¯ç”¨SOCKS5åä»£ = searchParams.get('http') ? 'http' : å¯ç”¨SOCKS5åä»£;
         } catch (err) {
-            console.error('½âÎöSOCKS5µØÖ·Ê§°Ü:', err.message);
-            ÆôÓÃSOCKS5·´´ú = null;
+            console.error('è§£æSOCKS5åœ°å€å¤±è´¥:', err.message);
+            å¯ç”¨SOCKS5åä»£ = null;
         }
-    } else ÆôÓÃSOCKS5·´´ú = null;
+    } else å¯ç”¨SOCKS5åä»£ = null;
 }
 
-async function »ñÈ¡SOCKS5ÕËºÅ(address) {
+async function è·å–SOCKS5è´¦å·(address) {
     const lastAtIndex = address.lastIndexOf("@");
     let [latter, former] = lastAtIndex === -1 ? [address, undefined] : [address.substring(lastAtIndex + 1), address.substring(0, lastAtIndex)];
     let username, password, hostname, port;
     if (former) {
         const formers = former.split(":");
         if (formers.length !== 2) {
-            throw new Error('ÎŞĞ§µÄ SOCKS µØÖ·¸ñÊ½£ºÈÏÖ¤²¿·Ö±ØĞëÊÇ "username:password" µÄĞÎÊ½');
+            throw new Error('æ— æ•ˆçš„ SOCKS åœ°å€æ ¼å¼ï¼šè®¤è¯éƒ¨åˆ†å¿…é¡»æ˜¯ "username:password" çš„å½¢å¼');
         }
         [username, password] = formers;
     }
@@ -637,11 +637,11 @@ async function »ñÈ¡SOCKS5ÕËºÅ(address) {
     }
 
     if (isNaN(port)) {
-        throw new Error('ÎŞĞ§µÄ SOCKS µØÖ·¸ñÊ½£º¶Ë¿ÚºÅ±ØĞëÊÇÊı×Ö');
+        throw new Error('æ— æ•ˆçš„ SOCKS åœ°å€æ ¼å¼ï¼šç«¯å£å·å¿…é¡»æ˜¯æ•°å­—');
     }
     const regex = /^\[.*\]$/;
     if (hostname.includes(":") && !regex.test(hostname)) {
-        throw new Error('ÎŞĞ§µÄ SOCKS µØÖ·¸ñÊ½£ºIPv6 µØÖ·±ØĞëÓÃ·½À¨ºÅÀ¨ÆğÀ´£¬Èç [2001:db8::1]');
+        throw new Error('æ— æ•ˆçš„ SOCKS åœ°å€æ ¼å¼ï¼šIPv6 åœ°å€å¿…é¡»ç”¨æ–¹æ‹¬å·æ‹¬èµ·æ¥ï¼Œå¦‚ [2001:db8::1]');
     }
     return { username, password, hostname, port };
-}
+                                             }
