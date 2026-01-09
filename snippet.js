@@ -1,528 +1,137 @@
-const FIXED_UUID = '5055669a178b65ccb90820e52413b83adf600a1b9b19bb11c2bb7138';// trojan版本
-import { connect } from "cloudflare:sockets";
-let 反代IP = '', 启用SOCKS5反代 = null, 启用SOCKS5全局反代 = false, 我的SOCKS5账号 = '', parsedSocks5Address = {};
+import { connect } from 'cloudflare:sockets';
+const T = '05afc6ab-d912-4c55-982d-ad03cde92be7', FA = 'ProxyIP.cmliussss.net', FP = '443', PW = '登录密码',
+    SC = [{ region: '地区名1', config: 'user:password@ip:port' }, { region: '地区名2', config: 'user:password@ip:port' }],
+    PI = [{ region: '香港', ip: '103.219.194.43' }, { region: '新加坡', ip: '139.180.159.133' }, { region: '日本', ip: '141.147.147.180' }, { region: '韩国', ip: '123.111.169.70' }, { region: '美国', ip: '104.131.168.146' }, { region: '加拿大', ip: '149.248.56.22' }, { region: '英国', ip: '192.236.193.108' }, { region: '德国', ip: '158.101.183.27' }, { region: '荷兰', ip: '103.137.249.117' }, { region: '芬兰', ip: '109.206.236.23' }, { region: '瑞典', ip: '62.182.192.226' }],
+    DD = [{ domain: "cf.3666888.xyz" },{ domain: "cf.090227.xyz" },{ domain: "ctcc.cloudflare.seeck.cn" },{ domain: "cf.tencentapp.cn" },{ domain: "store.ubi.com" }, { domain: "freeyx.cloudflare88.eu.org" }, { domain: "cf.877774.xyz" }];
+const E1 = atob('aW52YWxpZCBkYXRh'), E2 = atob('aW52YWxpZCB1c2Vy'), E3 = atob('Y29tbWFuZCBpcyBub3Qgc3VwcG9ydGVk'), E4 = atob('VURQIHByb3h5IG9ubHkgZW5hYmxlIGZvciBETlMgd2hpY2ggaXMgcG9ydCA1Mw=='), E5 = atob('aW52YWxpZCBhZGRyZXNzVHlwZQ=='), E6 = atob('YWRkcmVzc1ZhbHVlIGlzIGVtcHR5'), E7 = atob('d2ViU29ja2V0LmVhZHlTdGF0ZSBpcyBub3Qgb3Blbg=='), E8 = atob('U3RyaW5naWZpZWQgaWRlbnRpZmllciBpcyBpbnZhbGlk'), E9 = atob('SW52YWxpZCBTT0NLUyBhZGRyZXNzIGZvcm1hdA=='), EA = atob('bm8gYWNjZXB0YWJsZSBtZXRob2Rz'), EB = atob('c29ja3Mgc2VydmVyIG5lZWRzIGF1dGg='), EC = atob('ZmFpbCB0byBhdXRoIHNvY2tzIHNlcnZlcg=='), ED = atob('ZmFpbCB0byBvcGVuIHNvY2tzIGNvbm5lY3Rpb24='), A1 = 1, A2 = 2, A3 = 3;
+
 export default {
-    async fetch(request) {
-        反代IP = 反代IP ? 反代IP : request.cf.colo + '.pRoXyIp.CmLiUsSsS.NeT';
-        if (request.headers.get('Upgrade') === 'websocket') {
-            await 反代参数获取(request);
-            return await 处理WebSocket代理连接(request);
-        } else {
-            return new Response('Hello World!', { status: 200 });
-        }
+    async fetch(r, e, c) {
+        try {
+            const u = new URL(r.url);
+            if (r.headers.get('Upgrade') === 'websocket') return await hWR(r);
+            if (r.method === 'GET') {
+                if (u.pathname === '/') return new Response(gHTML(), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+                if (u.pathname === '/api/check-socks') return await hSC();
+                if (u.pathname === '/api/check-proxyip') return await hPC(r);
+                if (u.pathname.toLowerCase().includes(`/${T}`)) return await hSR(r, T)
+            }
+            return new Response('Not Found', { status: 404 })
+        } catch (err) { return new Response(err.toString(), { status: 500 }) }
     }
 };
 
-async function 处理WebSocket代理连接(request) {
-    const webSocketPair = new WebSocketPair();
-    const [client, webSocket] = Object.values(webSocketPair);
-    webSocket.accept();
-    let address = "";
-    const earlyDataHeader = request.headers.get("sec-websocket-protocol") || "";
-    const WS可读流 = 创建WS可读流(webSocket, earlyDataHeader);
-    let remoteSocketWapper = {
-        value: null
-    };
-    let udpStreamWrite = null;
-    WS可读流.pipeTo(new WritableStream({
-        async write(chunk, controller) {
-            if (udpStreamWrite) {
-                return udpStreamWrite(chunk);
-            }
-            if (remoteSocketWapper.value) {
-                const writer = remoteSocketWapper.value.writable.getWriter();
-                await writer.write(chunk);
-                writer.releaseLock();
-                return;
-            }
-            const {
-                hasError,
-                message,
-                portRemote = 443,
-                addressRemote = "",
-                rawClientData
-            } = await parseTrojanHeader(chunk);
-            address = addressRemote;
-            if (hasError) {
-                throw new Error(message);
-                return;
-            }
-            if (addressRemote.includes(atob('c3BlZWQuY2xvdWRmbGFyZS5jb20='))) throw new Error('Access');
-            handleTCPOutBound(remoteSocketWapper, addressRemote, portRemote, rawClientData, webSocket);
-        },
-        close() {
-        },
-        abort(reason) {
-        }
-    })).catch((err) => {
-    });
-    return new Response(null, {
-        status: 101,
-        // @ts-ignore
-        webSocket: client
-    });
+async function hSR(r, u) {
+    const url = new URL(r.url), L = [], w = url.hostname,
+        f = { domains: url.searchParams.get('domains')?.split(',') || [], ports: url.searchParams.get('ports')?.split(',') || [] },
+        dl = f.domains.length > 0 ? DD.filter(d => f.domains.some(s => d.domain.toLowerCase().includes(s.toLowerCase()))) : DD;
+    L.push(...gLFD(dl, u, w, f));
+    if (L.length === 0) return new Response('No nodes', { status: 404 });
+    const st = L.join('\n'), e = new TextEncoder(), b = e.encode(st), c = btoa(String.fromCharCode(...b));
+    return new Response(c, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } })
 }
 
-async function parseTrojanHeader(buffer) {
-    if (buffer.byteLength < 56) {
-        return {
-            hasError: true,
-            message: "invalid data"
-        };
-    }
-    let crLfIndex = 56;
-    if (new Uint8Array(buffer.slice(56, 57))[0] !== 0x0d || new Uint8Array(buffer.slice(57, 58))[0] !== 0x0a) {
-        return {
-            hasError: true,
-            message: "invalid header format (missing CR LF)"
-        };
-    }
-    const password = new TextDecoder().decode(buffer.slice(0, crLfIndex));
-    if (FIXED_UUID && password !== FIXED_UUID) {
-        return {
-            hasError: true,
-            message: "invalid password"
-        };
-    }
-
-    const socks5DataBuffer = buffer.slice(crLfIndex + 2);
-    if (socks5DataBuffer.byteLength < 6) {
-        return {
-            hasError: true,
-            message: "invalid SOCKS5 request data"
-        };
-    }
-
-    const view = new DataView(socks5DataBuffer);
-    const cmd = view.getUint8(0);
-    if (cmd !== 1) {
-        return {
-            hasError: true,
-            message: "unsupported command, only TCP (CONNECT) is allowed"
-        };
-    }
-
-    const atype = view.getUint8(1);
-    // 0x01: IPv4 address
-    // 0x03: Domain name
-    // 0x04: IPv6 address
-    let addressLength = 0;
-    let addressIndex = 2;
-    let address = "";
-    switch (atype) {
-        case 1:
-            addressLength = 4;
-            address = new Uint8Array(
-                socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
-            ).join(".");
-            break;
-        case 3:
-            addressLength = new Uint8Array(
-                socks5DataBuffer.slice(addressIndex, addressIndex + 1)
-            )[0];
-            addressIndex += 1;
-            address = new TextDecoder().decode(
-                socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
-            );
-            break;
-        case 4:
-            addressLength = 16;
-            const dataView = new DataView(socks5DataBuffer.slice(addressIndex, addressIndex + addressLength));
-            const ipv6 = [];
-            for (let i = 0; i < 8; i++) {
-                ipv6.push(dataView.getUint16(i * 2).toString(16));
-            }
-            address = ipv6.join(":");
-            break;
-        default:
-            return {
-                hasError: true,
-                message: `invalid addressType is ${atype}`
-            };
-    }
-
-    if (!address) {
-        return {
-            hasError: true,
-            message: `address is empty, addressType is ${atype}`
-        };
-    }
-
-    const portIndex = addressIndex + addressLength;
-    const portBuffer = socks5DataBuffer.slice(portIndex, portIndex + 2);
-    const portRemote = new DataView(portBuffer).getUint16(0);
-    return {
-        hasError: false,
-        addressRemote: address,
-        portRemote,
-        rawClientData: socks5DataBuffer.slice(portIndex + 4)
-    };
-}
-
-async function handleTCPOutBound(remoteSocket, addressRemote, portRemote, rawClientData, webSocket) {
-    async function connectAndWrite(address, port) {
-        let tcpSocket2;
-        if (启用SOCKS5反代 == 'socks5' && 启用SOCKS5全局反代) {
-            tcpSocket2 = await socks5Connect(address, port);
-        } else if (启用SOCKS5反代 == 'http' && 启用SOCKS5全局反代) {
-            tcpSocket2 = await httpConnect(address, port);
-        } else {
-            try {
-                tcpSocket2 = connect({ hostname: address, port });
-                await tcpSocket2.opened;
-            } catch {
-                if (启用SOCKS5反代 == 'socks5') {
-                    tcpSocket2 = await socks5Connect(address, port);
-                } else if (启用SOCKS5反代 == 'http') {
-                    tcpSocket2 = await httpConnect(address, port);
-                } else {
-                    const [反代IP地址, 反代IP端口] = await 解析地址端口(反代IP);
-                    tcpSocket2 = connect({ hostname: 反代IP地址, port: 反代IP端口 });
-                }
-            }
-        }
-
-        remoteSocket.value = tcpSocket2;
-        const writer = tcpSocket2.writable.getWriter();
-        await writer.write(rawClientData);
-        writer.releaseLock();
-        return tcpSocket2;
-    }
-    async function retry() {
-        const [反代IP地址, 反代IP端口] = await 解析地址端口(反代IP);
-        const tcpSocket2 = await connectAndWrite(反代IP地址, 反代IP端口);
-        tcpSocket2.closed.catch((error) => {
-        }).finally(() => {
-            safeCloseWebSocket(webSocket);
+function gLFD(dl, u, w, f = {}) {
+    const ap = [443, 80], ps = f.ports && f.ports.length > 0 ? ap.filter(p => f.ports.includes(p.toString())) : ap, L = [], pr = 'vless';
+    dl.forEach(it => {
+        if (SC.length > 0) SC.forEach((s, si) => {
+            const { region: rg } = s; ps.forEach(p => {
+                const n = `Sinppets-Socks-${rg}-${it.domain}-${p}`, ws = encodeURIComponent(`/?ed=2048&socks=${si}`),
+                    pm = new URLSearchParams({ encryption: 'none', security: p === 443 ? 'tls' : 'none', type: 'ws', host: w, path: ws });
+                if (p === 443) { pm.append('sni', w); pm.append('fp', 'firefox') }
+                L.push(`${pr}://${u}@${it.domain}:${p}?${pm}#${encodeURIComponent(n)}`)
+            })
         });
-        转发远程数据到WS(tcpSocket2, webSocket, null);
-    }
-    const tcpSocket = await connectAndWrite(addressRemote, portRemote);
-    转发远程数据到WS(tcpSocket, webSocket, retry);
-}
-
-function 创建WS可读流(webSocketServer, earlyDataHeader) {
-    let readableStreamCancel = false;
-    const stream = new ReadableStream({
-        start(controller) {
-            webSocketServer.addEventListener("message", (event) => {
-                if (readableStreamCancel) {
-                    return;
-                }
-                const message = event.data;
-                controller.enqueue(message);
-            });
-            webSocketServer.addEventListener("close", () => {
-                safeCloseWebSocket(webSocketServer);
-                if (readableStreamCancel) {
-                    return;
-                }
-                controller.close();
-            });
-            webSocketServer.addEventListener("error", (err) => {
-                controller.error(err);
-            });
-            const { earlyData, error } = base64ToArrayBuffer(earlyDataHeader);
-            if (error) {
-                controller.error(error);
-            } else if (earlyData) {
-                controller.enqueue(earlyData);
-            }
-        },
-        pull(controller) { },
-        cancel(reason) {
-            if (readableStreamCancel) {
-                return;
-            }
-            readableStreamCancel = true;
-            safeCloseWebSocket(webSocketServer);
-        }
-    });
-    return stream;
-}
-
-async function 转发远程数据到WS(remoteSocket, webSocket, retry) {
-    let hasIncomingData = false;
-    await remoteSocket.readable.pipeTo(
-        new WritableStream({
-            start() { },
-            /**
-             *
-             * @param {Uint8Array} chunk
-             * @param {*} controller
-             */
-            async write(chunk, controller) {
-                hasIncomingData = true;
-                if (webSocket.readyState !== WS_READY_STATE_OPEN) {
-                    controller.error(
-                        "webSocket connection is not open"
-                    );
-                }
-                webSocket.send(chunk);
-            },
-            close() {
-            },
-            abort(reason) {
-            }
+        if (PI.length > 0) PI.forEach((px, pxi) => {
+            const { region: rg, ip } = px;
+            ps.forEach(p => {
+                // Address: ProxyIP (Entry Node - Client Side)
+                // This makes the ENTRY path different for each node.
+                const n = `Sinppets-ProxyIP-${rg}-${it.domain}-${p}`, ws = encodeURIComponent(`/?ed=2048&proxyip=${pxi}`),
+                    pm = new URLSearchParams({ encryption: 'none', security: p === 443 ? 'tls' : 'none', type: 'ws', host: w, path: ws });
+                if (p === 443) { pm.append('sni', w); pm.append('fp', 'firefox') }
+                L.push(`${pr}://${u}@${ip}:${p}?${pm}#${encodeURIComponent(n)}`)
+            })
         })
-    ).catch((error) => {
-        safeCloseWebSocket(webSocket);
     });
-    if (hasIncomingData === false && retry) {
-        retry();
-    }
+    return L
 }
 
-function base64ToArrayBuffer(base64Str) {
-    if (!base64Str) {
-        return { error: null };
-    }
-    try {
-        base64Str = base64Str.replace(/-/g, "+").replace(/_/g, "/");
-        const decode = atob(base64Str);
-        const arryBuffer = Uint8Array.from(decode, (c) => c.charCodeAt(0));
-        return { earlyData: arryBuffer.buffer, error: null };
-    } catch (error) {
-        return { error };
-    }
-}
+async function hWR(r) {
+    const u = new URL(r.url), si = u.searchParams.get('socks');
+    let six = -1; if (si !== null) six = parseInt(si);
+    let psc = {}, ise = !1;
+    if (SC.length > 0 && six >= 0 && six < SC.length) { try { psc = pSC(SC[six].config); ise = !0 } catch (e) { console.error('SOCKS parse fail:', e.message) } }
 
-let WS_READY_STATE_OPEN = 1;
-let WS_READY_STATE_CLOSING = 2;
+    // Server-Side Bypass: Ignore proxyip param, connect directly.
 
-function safeCloseWebSocket(socket) {
-    try {
-        if (socket.readyState === WS_READY_STATE_OPEN || socket.readyState === WS_READY_STATE_CLOSING) {
-            socket.close();
+    const wp = new WebSocketPair(), [cs, ss] = Object.values(wp); ss.accept();
+    let rcw = { socket: null }, idq = !1;
+    const ed = r.headers.get('sec-websocket-protocol') || '', rd = mRS(ss, ed);
+    rd.pipeTo(new WritableStream({
+        async write(c) {
+            if (idq) return await fUDP(c, ss, null);
+            if (rcw.socket) { const w = rcw.socket.writable.getWriter(); await w.write(c); w.releaseLock(); return }
+            const { hasError: he, message: m, addressType: at, port: pt, hostname: hn, rawIndex: ri, version: v, isUDP: iu } = pWPH(c, T);
+            if (he) throw new Error(m);
+            if (iu) { if (pt === 53) idq = !0; else throw new Error(E4) }
+            const rh = new Uint8Array([v[0], 0]), raw = c.slice(ri);
+            if (idq) return fUDP(raw, ss, rh);
+            await fTCP(at, hn, pt, raw, ss, rh, rcw, ise, psc)
         }
-    } catch (error) {
-    }
+    })).catch(e => console.log('WS err:', e));
+    return new Response(null, { status: 101, webSocket: cs })
 }
 
-async function 获取SOCKS5账号(address) {
-    // 使用 "@" 分割地址，分为认证部分和服务器地址部分
-    const lastAtIndex = address.lastIndexOf("@");
-    let [latter, former] = lastAtIndex === -1 ? [address, undefined] : [address.substring(lastAtIndex + 1), address.substring(0, lastAtIndex)];
-    let username, password, hostname, port;
-
-    // 如果存在 former 部分，说明提供了认证信息
-    if (former) {
-        const formers = former.split(":");
-        if (formers.length !== 2) {
-            throw new Error('无效的 SOCKS 地址格式：认证部分必须是 "username:password" 的形式');
-        }
-        [username, password] = formers;
+async function fTCP(at, h, pn, rd, ws, rh, rcw, ise, psc) {
+    async function cAS(a, p) {
+        let rs;
+        if (ise) rs = await eSC(at, a, p, psc);
+        else rs = connect({ hostname: a, port: p });
+        const w = rs.writable.getWriter(); await w.write(rd); w.releaseLock(); return rs
     }
-
-    // 解析服务器地址部分
-    const latters = latter.split(":");
-    // 检查是否是IPv6地址带端口格式 [xxx]:port
-    if (latters.length > 2 && latter.includes("]:")) {
-        // IPv6地址带端口格式：[2001:db8::1]:8080
-        port = Number(latter.split("]:")[1].replace(/[^\d]/g, ''));
-        hostname = latter.split("]:")[0] + "]"; // 正确提取hostname部分
-    } else if (latters.length === 2) {
-        // IPv4地址带端口或域名带端口
-        port = Number(latters.pop().replace(/[^\d]/g, ''));
-        hostname = latters.join(":");
-    } else {
-        port = 80;
-        hostname = latter;
+    async function rC() {
+        const ns = ise ? await cAS(h, pn) : await cAS(FA || h, parseInt(FP, 10) || pn);
+        rcw.socket = ns; ns.closed.catch(() => { }).finally(() => cSQ(ws)); cS(ns, ws, rh, null)
     }
-
-    if (isNaN(port)) {
-        throw new Error('无效的 SOCKS 地址格式：端口号必须是数字');
-    }
-
-    // 处理 IPv6 地址的特殊情况
-    // IPv6 地址包含多个冒号，所以必须用方括号括起来，如 [2001:db8::1]
-    const regex = /^\[.*\]$/;
-    if (hostname.includes(":") && !regex.test(hostname)) {
-        throw new Error('无效的 SOCKS 地址格式：IPv6 地址必须用方括号括起来，如 [2001:db8::1]');
-    }
-
-    //if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) hostname = `${atob('d3d3Lg==')}${hostname}${atob('LmlwLjA5MDIyNy54eXo=')}`;
-    // 返回解析后的结果
-    return {
-        username,  // 用户名，如果没有则为 undefined
-        password,  // 密码，如果没有则为 undefined
-        hostname,  // 主机名，可以是域名、IPv4 或 IPv6 地址
-        port,	 // 端口号，已转换为数字类型
-    }
-}
-async function 解析地址端口(proxyIP) {
-    proxyIP = proxyIP.toLowerCase();
-    let 地址 = proxyIP, 端口 = 443;
-    if (proxyIP.includes('.tp')) {
-        const tpMatch = proxyIP.match(/\.tp(\d+)/);
-        if (tpMatch) 端口 = parseInt(tpMatch[1], 10);
-        return [地址, 端口];
-    }
-    if (proxyIP.includes(']:')) {
-        const parts = proxyIP.split(']:');
-        地址 = parts[0] + ']';
-        端口 = parseInt(parts[1], 10) || 端口;
-    } else if (proxyIP.includes(':') && !proxyIP.startsWith('[')) {
-        const colonIndex = proxyIP.lastIndexOf(':');
-        地址 = proxyIP.slice(0, colonIndex);
-        端口 = parseInt(proxyIP.slice(colonIndex + 1), 10) || 端口;
-    }
-    return [地址, 端口];
-}
-async function httpConnect(addressRemote, portRemote) {
-    const { username, password, hostname, port } = parsedSocks5Address;
-    const sock = await connect({ hostname, port });
-
-    // 构建HTTP CONNECT请求
-    const authHeader = username && password ? `Proxy-Authorization: Basic ${btoa(`${username}:${password}`)}\r\n` : '';
-    const connectRequest = `CONNECT ${addressRemote}:${portRemote} HTTP/1.1\r\n` +
-        `Host: ${addressRemote}:${portRemote}\r\n` +
-        authHeader +
-        `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n` +
-        `Proxy-Connection: Keep-Alive\r\n` +
-        `Connection: Keep-Alive\r\n\r\n`;
-
-    // 发送连接请求
-    const writer = sock.writable.getWriter();
-    try {
-        await writer.write(new TextEncoder().encode(connectRequest));
-    } catch (err) {
-        throw new Error(`发送HTTP CONNECT请求失败: ${err.message}`);
-    } finally {
-        writer.releaseLock();
-    }
-
-    // 读取并处理HTTP响应
-    const reader = sock.readable.getReader();
-    let responseBuffer = new Uint8Array(0);
-
-    try {
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) throw new Error('HTTP代理连接中断');
-
-            // 合并响应数据
-            const newBuffer = new Uint8Array(responseBuffer.length + value.length);
-            newBuffer.set(responseBuffer);
-            newBuffer.set(value, responseBuffer.length);
-            responseBuffer = newBuffer;
-
-            const respText = new TextDecoder().decode(responseBuffer);
-
-            // 检查是否收到完整的HTTP响应头
-            if (respText.includes('\r\n\r\n')) {
-                const headersEndPos = respText.indexOf('\r\n\r\n') + 4;
-                const headers = respText.substring(0, headersEndPos);
-
-                if (!headers.startsWith('HTTP/1.1 200') && !headers.startsWith('HTTP/1.0 200')) {
-                    throw new Error(`HTTP代理连接失败: ${headers.split('\r\n')[0]}`);
-                }
-
-                // 处理响应头后的剩余数据
-                if (headersEndPos < responseBuffer.length) {
-                    const remainingData = responseBuffer.slice(headersEndPos);
-                    const { readable, writable } = new TransformStream();
-                    new ReadableStream({
-                        start(controller) {
-                            controller.enqueue(remainingData);
-                        }
-                    }).pipeTo(writable).catch(() => { });
-                    // @ts-ignore
-                    sock.readable = readable;
-                }
-                break;
-            }
-        }
-    } catch (err) {
-        throw new Error(`处理HTTP代理响应失败: ${err.message}`);
-    } finally {
-        reader.releaseLock();
-    }
-
-    return sock;
+    try { const is = await cAS(h, pn); rcw.socket = is; cS(is, ws, rh, rC) } catch (e) { console.log('Init conn fail:', e); rC() }
 }
 
-async function socks5Connect(targetHost, targetPort) {
-    const { username, password, hostname, port } = parsedSocks5Address;
-    const sock = connect({
-        hostname: hostname,
-        port: port
-    });
-    await sock.opened;
-    const w = sock.writable.getWriter();
-    const r = sock.readable.getReader();
-    await w.write(new Uint8Array([5, 2, 0, 2]));
-    const auth = (await r.read()).value;
-    if (auth[1] === 2 && username) {
-        const user = new TextEncoder().encode(username);
-        const pass = new TextEncoder().encode(password);
-        await w.write(new Uint8Array([1, user.length, ...user, pass.length, ...pass]));
-        await r.read();
-    }
-    const domain = new TextEncoder().encode(targetHost);
-    await w.write(new Uint8Array([5, 1, 0, 3, domain.length, ...domain,
-        targetPort >> 8, targetPort & 0xff
-    ]));
-    await r.read();
-    w.releaseLock();
-    r.releaseLock();
-    return sock;
-}
+function pWPH(c, t) { if (c.byteLength < 24) return { hasError: !0, message: E1 }; const v = new Uint8Array(c.slice(0, 1)); if (fID(new Uint8Array(c.slice(1, 17))) !== t) return { hasError: !0, message: E2 }; const ol = new Uint8Array(c.slice(17, 18))[0], cmd = new Uint8Array(c.slice(18 + ol, 19 + ol))[0]; let iu = !1; if (cmd === 1) { } else if (cmd === 2) iu = !0; else return { hasError: !0, message: E3 }; const pi = 19 + ol, pt = new DataView(c.slice(pi, pi + 2)).getUint16(0); let ai = pi + 2, al = 0, avi = ai + 1, hn = ''; const at = new Uint8Array(c.slice(ai, avi))[0]; switch (at) { case A1: al = 4; hn = new Uint8Array(c.slice(avi, avi + al)).join('.'); break; case A2: al = new Uint8Array(c.slice(avi, avi + 1))[0]; avi += 1; hn = new TextDecoder().decode(c.slice(avi, avi + al)); break; case A3: al = 16; const ip6 = [], iv = new DataView(c.slice(avi, avi + al)); for (let i = 0; i < 8; i++)ip6.push(iv.getUint16(i * 2).toString(16)); hn = ip6.join(':'); break; default: return { hasError: !0, message: `${E5}: ${at}` } }if (!hn) return { hasError: !0, message: `${E6}: ${at}` }; return { hasError: !1, addressType: at, port: pt, hostname: hn, isUDP: iu, rawIndex: avi + al, version: v } }
+function mRS(s, eh) { let ca = !1; return new ReadableStream({ start(c) { s.addEventListener('message', e => { if (!ca) c.enqueue(e.data) }); s.addEventListener('close', () => { if (!ca) { cSQ(s); c.close() } }); s.addEventListener('error', e => c.error(e)); const { earlyData: ed, error: er } = b64A(eh); if (er) c.error(er); else if (ed) c.enqueue(ed) }, cancel() { ca = !0; cSQ(s) } }) }
+async function cS(rs, ws, hd, rf) { let h = hd, hd2 = !1; await rs.readable.pipeTo(new WritableStream({ async write(c, ct) { hd2 = !0; if (ws.readyState !== 1) ct.error(E7); if (h) { ws.send(await new Blob([h, c]).arrayBuffer()); h = null } else ws.send(c) }, abort(r) { console.error("Readable aborted:", r) } })).catch(e => { console.error("Stream conn err:", e); cSQ(ws) }); if (!hd2 && rf) rf() }
+async function fUDP(uc, ws, rh) { try { const ts = connect({ hostname: '8.8.4.4', port: 53 }); let vh = rh; const w = ts.writable.getWriter(); await w.write(uc); w.releaseLock(); await ts.readable.pipeTo(new WritableStream({ async write(c) { if (ws.readyState === 1) { if (vh) { ws.send(await new Blob([vh, c]).arrayBuffer()); vh = null } else ws.send(c) } } })) } catch (e) { console.error(`DNS fwd err:${e.message}`) } }
+async function eSC(at, a, p, psc) { const { username: u, password: pw, hostname: h, socksPort: sp } = psc, s = connect({ hostname: h, port: sp }), w = s.writable.getWriter(); await w.write(new Uint8Array(u ? [5, 2, 0, 2] : [5, 1, 0])); const rdr = s.readable.getReader(); let rs = (await rdr.read()).value; if (rs[0] !== 5 || rs[1] === 255) throw new Error(EA); if (rs[1] === 2) { if (!u || !pw) throw new Error(EB); const enc = new TextEncoder(), ar = new Uint8Array([1, u.length, ...enc.encode(u), pw.length, ...enc.encode(pw)]); await w.write(ar); rs = (await rdr.read()).value; if (rs[0] !== 1 || rs[1] !== 0) throw new Error(EC) } const enc = new TextEncoder(); let DA; switch (at) { case A1: DA = new Uint8Array([1, ...a.split('.').map(Number)]); break; case A2: DA = new Uint8Array([3, a.length, ...enc.encode(a)]); break; case A3: DA = new Uint8Array([4, ...a.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]); break; default: throw new Error(E5) }await w.write(new Uint8Array([5, 1, 0, ...DA, p >> 8, p & 255])); rs = (await rdr.read()).value; if (rs[1] !== 0) throw new Error(ED); w.releaseLock(); rdr.releaseLock(); return s }
+function pSC(a) { let [l, f] = a.split("@").reverse(), u, pw, h, sp; if (f) { const fs = f.split(":"); if (fs.length !== 2) throw new Error(E9);[u, pw] = fs } const ls = l.split(":"); sp = Number(ls.pop()); if (isNaN(sp)) throw new Error(E9); h = ls.join(":"); if (h.includes(":") && !/^\[.*\]$/.test(h)) throw new Error(E9); return { username: u, password: pw, hostname: h, socksPort: sp } }
+function b64A(b) { if (!b) return { error: null }; try { b = b.replace(/-/g, '+').replace(/_/g, '/'); return { earlyData: Uint8Array.from(atob(b), c => c.charCodeAt(0)).buffer, error: null } } catch (e) { return { error: e } } }
+function iVF(u) { return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(u) }
+function cSQ(s) { try { if (s.readyState === 1 || s.readyState === 2) s.close() } catch (e) { } }
+const hT = Array.from({ length: 256 }, (v, i) => (i + 256).toString(16).slice(1));
+function fID(a, o = 0) { const id = (hT[a[o]] + hT[a[o + 1]] + hT[a[o + 2]] + hT[a[o + 3]] + "-" + hT[a[o + 4]] + hT[a[o + 5]] + "-" + hT[a[o + 6]] + hT[a[o + 7]] + "-" + hT[a[o + 8]] + hT[a[o + 9]] + "-" + hT[a[o + 10]] + hT[a[o + 11]] + hT[a[o + 12]] + hT[a[o + 13]] + hT[a[o + 14]] + hT[a[o + 15]]).toLowerCase(); if (!iVF(id)) throw new TypeError(E8); return id }
+async function hSC() { const rs = []; for (const s of SC) { const st = Date.now(); try { const p = pSC(s.config), sk = await eSC(A1, '1.1.1.1', 80, p), lt = Date.now() - st; try { sk.close() } catch (e) { } rs.push({ region: s.region, status: 'online', latency: lt }) } catch (e) { rs.push({ region: s.region, status: 'offline', latency: -1, error: e.message }) } } return new Response(JSON.stringify({ results: rs }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }) }
 
-async function 反代参数获取(request) {
-    const url = new URL(request.url);
-    const { pathname, searchParams } = url;
-    const pathLower = pathname.toLowerCase();
-
-    // 初始化
-    我的SOCKS5账号 = searchParams.get('socks5') || searchParams.get('http') || null;
-    启用SOCKS5全局反代 = searchParams.has('globalproxy') || false;
-
-    // 统一处理反代IP参数 (优先级最高,使用正则一次匹配)
-    const proxyMatch = pathLower.match(/\/(proxyip[.=]|pyip=|ip=)(.+)/);
-    if (searchParams.has('proxyip')) {
-        const 路参IP = searchParams.get('proxyip');
-        反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
-        return;
-    } else if (proxyMatch) {
-        const 路参IP = proxyMatch[1] === 'proxyip.' ? `proxyip.${proxyMatch[2]}` : proxyMatch[2];
-        反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
-        return;
-    }
-
-    // 处理SOCKS5/HTTP代理参数
-    let socksMatch;
-    if ((socksMatch = pathname.match(/\/(socks5?|http):\/?\/?(.+)/i))) {
-        // 格式: /socks5://... 或 /http://...
-        启用SOCKS5反代 = socksMatch[1].toLowerCase() === 'http' ? 'http' : 'socks5';
-        我的SOCKS5账号 = socksMatch[2].split('#')[0];
-        启用SOCKS5全局反代 = true;
-
-        // 处理Base64编码的用户名密码
-        if (我的SOCKS5账号.includes('@')) {
-            const atIndex = 我的SOCKS5账号.lastIndexOf('@');
-            let userPassword = 我的SOCKS5账号.substring(0, atIndex).replaceAll('%3D', '=');
-            if (/^(?:[A-Z0-9+/]{4})*(?:[A-Z0-9+/]{2}==|[A-Z0-9+/]{3}=)?$/i.test(userPassword) && !userPassword.includes(':')) {
-                userPassword = atob(userPassword);
-            }
-            我的SOCKS5账号 = `${userPassword}@${我的SOCKS5账号.substring(atIndex + 1)}`;
-        }
-    } else if ((socksMatch = pathname.match(/\/(g?s5|socks5|g?http)=(.+)/i))) {
-        // 格式: /socks5=... 或 /s5=... 或 /gs5=... 或 /http=... 或 /ghttp=...
-        const type = socksMatch[1].toLowerCase();
-        我的SOCKS5账号 = socksMatch[2];
-        启用SOCKS5反代 = type.includes('http') ? 'http' : 'socks5';
-        启用SOCKS5全局反代 = type.startsWith('g') || 启用SOCKS5全局反代; // gs5 或 ghttp 开头启用全局
-    }
-
-    // 解析SOCKS5地址
-    if (我的SOCKS5账号) {
+async function hPC(r) {
+    const u = new URL(r.url), idx = u.searchParams.get('index');
+    const cOne = async (p) => {
+        const st = Date.now();
         try {
-            parsedSocks5Address = await 获取SOCKS5账号(我的SOCKS5账号);
-            启用SOCKS5反代 = searchParams.get('http') ? 'http' : 启用SOCKS5反代;
-        } catch (err) {
-            console.error('解析SOCKS5地址失败:', err.message);
-            启用SOCKS5反代 = null;
+            const sk = connect({ hostname: p.ip, port: 443 }), w = sk.writable.getWriter(); await w.close();
+            const lt = Date.now() - st; try { sk.close() } catch (e) { }
+            return { region: p.region, status: 'online', latency: lt }
+        } catch (e) {
+            return { region: p.region, status: 'offline', latency: -1, error: e.message }
         }
-    } else 启用SOCKS5反代 = null;
-                    }
+    };
+    if (idx !== null) {
+        const i = parseInt(idx);
+        if (i >= 0 && i < PI.length) {
+            const res = await cOne(PI[i]);
+            return new Response(JSON.stringify(res), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+        }
+    }
+    const rs = [];
+    for (const p of PI) { rs.push(await cOne(p)) }
+    return new Response(JSON.stringify({ results: rs }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+}
+
+function gHTML() { const n = !!(PW && PW.trim()), p = PW || ''; return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sinppets</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;display:flex;align-items:center;justify-content:center}.c{max-width:600px;width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.2)}.h{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:30px;text-align:center}.h h2{font-size:24px;margin-bottom:8px}.h p{font-size:14px;opacity:.9}.s{padding:20px;border-bottom:1px solid #eee}.s:last-child{border-bottom:none}.st{font-size:16px;font-weight:600;margin-bottom:15px;color:#333;display:flex;align-items:center}.st::before{content:'';display:inline-block;width:4px;height:16px;background:#667eea;margin-right:8px;border-radius:2px}.bg{display:flex;gap:8px;margin-bottom:12px}.bs{padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;transition:all .3s}.bs:hover{background:#f0f0f0;transform:translateY(-1px)}.dg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.di{display:flex;align-items:center;padding:12px;border:2px solid #e0e0e0;border-radius:8px;background:#fafafa;font-size:13px;cursor:pointer;transition:all .3s}.di:hover{background:#f0f0f0;border-color:#667eea}.di.sel{background:#f0f4ff;border-color:#667eea;box-shadow:0 2px 8px rgba(102,126,234,.2)}.di input{margin-right:8px}.pg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pi{display:flex;align-items:center;justify-content:center;padding:12px;border:2px solid #e0e0e0;border-radius:8px;background:#fafafa;font-size:14px;font-weight:500;cursor:pointer;transition:all .3s}.pi:hover{background:#f0f0f0;border-color:#667eea}.pi.sel{background:#f0f4ff;border-color:#667eea;box-shadow:0 2px 8px rgba(102,126,234,.2)}.gb{width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s;box-shadow:0 4px 15px rgba(102,126,234,.4)}.gb:hover{transform:translateY(-2px)}.r{margin-top:15px;padding:15px;background:#f9f9f9;border-radius:8px;border-left:4px solid #667eea;display:none}.r input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:10px;background:#fff}.cb{padding:8px 16px;background:#4CAF50;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:all .3s}.cb:hover{background:#45a049}.sc{display:flex;flex-direction:column;gap:8px}.sk{background:#f8f9fa;border:2px solid #e0e0e0;border-radius:6px;padding:10px 14px;transition:all .3s;display:flex;align-items:center;justify-content:space-between;gap:12px}.sk.on{border-color:#4CAF50;background:#f1f8f4}.sk.off{border-color:#f44336;background:#fef1f0}.sr{font-weight:600;font-size:13px;color:#333;min-width:60px}.sl{font-size:12px;color:#666;flex:1;text-align:center}.si{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:500;white-space:nowrap}.si.on{background:#4CAF50;color:#fff}.si.off{background:#f44336;color:#fff}.si.chk{background:#9e9e9e;color:#fff}.lc{padding:40px}.lf{display:flex;flex-direction:column;gap:20px}.ig{display:flex;flex-direction:column;gap:8px}.ig label{font-size:14px;font-weight:500;color:#333}.ig input{padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;transition:all .3s}.ig input:focus{outline:none;border-color:#667eea}.lb{padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s}.lb:hover{transform:translateY(-2px)}.em{color:#f44336;font-size:13px;padding:10px;background:#ffebee;border-radius:6px;display:none}.lo{position:absolute;top:20px;right:20px;padding:8px 16px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer}@media(max-width:480px){.dg,.pg{grid-template-columns:1fr}.lo{position:static;margin-top:10px;width:100%}}</style></head><body><div class="c" id="lc" style="display:${n ? 'block' : 'none'}"><div class="h"><h2>🔐 登录</h2><p>请输入密码</p></div><div class="lc"><form class="lf" id="lf"><div class="ig"><label for="pw">访问密码</label><input type="password" id="pw" required autofocus></div><div class="em" id="em">密码错误</div><button type="submit" class="lb">🔓 登录</button></form></div></div><div class="c" id="mc" style="display:${n ? 'none' : 'block'}"><div class="h" style="position:relative"><h2>🚀 Sinppets</h2><p>选择域名和端口</p>${n ? '<button class="lo" onclick="logout()">🚪 退出</button>' : ''}</div><form id="ff"><div class="s"><div class="st">域名</div><div class="bg"><button type="button" class="bs" onclick="selA('d')">全选</button><button type="button" class="bs" onclick="clrA('d')">清空</button></div><div class="dg" id="dg"></div></div><div class="s"><div class="st">端口</div><div class="bg"><button type="button" class="bs" onclick="selA('p')">全选</button><button type="button" class="bs" onclick="clrA('p')">清空</button></div><div class="pg"><div class="pi" data-port="443" onclick="togP(this)">🔒 443</div><div class="pi" data-port="80" onclick="togP(this)">🌐 80</div></div></div><div class="s"><div class="st">📡 SOCKS<button type="button" class="bs" style="margin-left:auto" onclick="chkS()">刷新</button></div><div id="ssc" class="sc">${SC.map((s, i) => `<div class="sk" data-index="${i}"><span class="sr">${s.region}</span><span class="sl" id="l${i}">---</span><span class="si chk" id="s${i}">⚪</span></div>`).join('')}</div></div><div class="s"><div class="st">🌍 ProxyIP<button type="button" class="bs" style="margin-left:auto" onclick="chkP()">刷新</button></div><div id="psc" class="sc">${PI.map((s, i) => `<div class="sk pc" data-index="${i}"><span class="sr">${s.region}</span><span class="sl" id="pl${i}">---</span><span class="si chk" id="ps${i}">⚪</span></div>`).join('')}</div></div><button type="submit" class="gb">✨ 生成链接</button></form><div id="res" class="r"><input type="text" id="url" readonly><button class="cb" onclick="copy()">📋 复制</button></div></div><script>const PW='${p}',NP=${n},DS=[${DD.map(d => `{name:"${d.name || d.domain}",domain:"${d.domain}"}`).join(',')}];function chkL(){return!NP||sessionStorage.getItem('sp_l')==='1'}function shM(){document.getElementById('lc').style.display='none';document.getElementById('mc').style.display='block'}function shL(){document.getElementById('lc').style.display='block';document.getElementById('mc').style.display='none'}function logout(){sessionStorage.removeItem('sp_l');shL();const p=document.getElementById('pw');if(p)p.value=''}document.getElementById('lf')?.addEventListener('submit',e=>{e.preventDefault();if(document.getElementById('pw').value===PW){sessionStorage.setItem('sp_l','1');shM();initD();selA('p');document.getElementById('em').style.display='none'}else{document.getElementById('em').style.display='block';document.getElementById('pw').value='';document.getElementById('pw').focus()}});function initD(){const g=document.getElementById('dg');g.innerHTML='';DS.forEach(d=>{const v=document.createElement('div');v.className='di';v.innerHTML=\`<input type="checkbox" name="d" value="\${d.domain}" onchange="updI(this)">\${d.name}\`;v.onclick=e=>{if(e.target.type!=='checkbox'){const c=v.querySelector('input');c.checked=!c.checked;updI(c)}};g.appendChild(v)})}function updI(c){c.closest('.di').classList.toggle('sel',c.checked)}function togP(e){e.classList.toggle('sel')}function selA(t){if(t==='d')document.querySelectorAll('[name="d"]').forEach(c=>{c.checked=!0;updI(c)});else document.querySelectorAll('.pi').forEach(e=>e.classList.add('sel'))}function clrA(t){if(t==='d')document.querySelectorAll('[name="d"]').forEach(c=>{c.checked=!1;updI(c)});else document.querySelectorAll('.pi').forEach(e=>e.classList.remove('sel'))}document.getElementById('ff').onsubmit=e=>{e.preventDefault();const ds=Array.from(document.querySelectorAll('input[name="d"]:checked')).map(c=>c.value),ps=Array.from(document.querySelectorAll('.pi.sel')).map(e=>e.dataset.port),pr=new URLSearchParams();if(ds.length>0)pr.append('domains',ds.join(','));if(ps.length>0)pr.append('ports',ps.join(','));document.getElementById('url').value=location.origin+'/${T}'+(pr.toString()?'?'+pr:'');document.getElementById('res').style.display='block'};function copy(){const i=document.getElementById('url');i.select();document.execCommand('copy');const b=event.target,t=b.textContent;b.textContent='✅ 已复制';b.style.background='#66bb6a';setTimeout(()=>{b.textContent=t;b.style.background='#4CAF50'},2e3)}async function chkS(){const cs=document.querySelectorAll('.sk:not(.pc)');cs.forEach(c=>{c.classList.remove('on','off');const i=c.dataset.index;document.getElementById('s'+i).className='si chk';document.getElementById('s'+i).textContent='⚪';document.getElementById('l'+i).textContent='---'});try{const r=await fetch('/api/check-socks'),d=await r.json();d.results.forEach((res,i)=>{const se=document.getElementById('s'+i),le=document.getElementById('l'+i),c=cs[i];if(res.status==='online'){se.className='si on';se.textContent='🟢';le.textContent=res.latency+'ms';c.classList.add('on')}else{se.className='si off';se.textContent='🔴';le.textContent='离线';c.classList.add('off')}})}catch(e){cs.forEach(c=>{const i=c.dataset.index;document.getElementById('s'+i).className='si off';document.getElementById('s'+i).textContent='🔴'})}}async function chkP(){const cs=document.querySelectorAll('.pc');cs.forEach(c=>{c.classList.remove('on','off');const i=c.dataset.index;document.getElementById('ps'+i).className='si chk';document.getElementById('ps'+i).textContent='⚪';document.getElementById('pl'+i).textContent='---'});for(let i=0;i<cs.length;i++){const c=cs[i],idx=c.dataset.index,se=document.getElementById('ps'+idx),le=document.getElementById('pl'+idx);se.textContent='⏳';try{const r=await fetch('/api/check-proxyip?index='+idx),res=await r.json();if(res.status==='online'){se.className='si on';se.textContent='🟢';le.textContent=res.latency+'ms';c.classList.add('on')}else{se.className='si off';se.textContent='🔴';le.textContent='离线';c.classList.add('off')}}catch(e){se.className='si off';se.textContent='🔴';le.textContent='错误';c.classList.add('off')}}}window.onload=()=>{if(chkL()){shM();initD();selA('p');setTimeout(chkS,500);setTimeout(chkP,1e3)}else NP?shL():(initD(),selA('p'),setTimeout(chkS,500),setTimeout(chkP,1e3))}</script></body></html>` }
