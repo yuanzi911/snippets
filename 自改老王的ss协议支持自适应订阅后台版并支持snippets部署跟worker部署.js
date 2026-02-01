@@ -309,4 +309,5 @@ const qxLinks=useList.map((item,idx)=>{try{if(item.startsWith('ss://')){const{ta
 return new Response(qxLinks,{headers:noCache})}
 const links=useList.map((item,idx)=>{if(item.startsWith('ss://')){const{tag,server,port}=pSS(item,idx,true);if(!server)return item;return generateSSLink(server,port,d,fullPath,password,tag)}const{h,p,n}=pIP(item,true);const remark=n?`${n}-ss`:'ss';return generateSSLink(h,p,d,fullPath,password,remark)}).join('\n');
 return new Response(btoa(unescape(encodeURIComponent(links))),{headers:noCache})}}
+
 return new Response('Not Found',{status:404})}catch(e){return new Response('Error',{status:500})}}};
